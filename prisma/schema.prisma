@@ -1,0 +1,118 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  ADMIN
+  TEACHER
+  STUDENT
+}
+
+enum AssignmentType {
+  EXERCISE
+  EXAM
+}
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  username     String   @unique
+  passwordHash String
+  role         Role
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  teacherId String?
+  teacher   User?   @relation("TeacherStudents", fields: [teacherId], references: [id], onDelete: SetNull)
+  students  User[]  @relation("TeacherStudents")
+
+  sentMessages     Message[] @relation("Sender")
+  receivedMessages Message[] @relation("Receiver")
+  results          Result[]
+  exitEvents       ExitEvent[]
+
+  @@index([teacherId])
+  @@index([role])
+}
+
+model Question {
+  id          String  @id @default(cuid())
+  text        String
+  options     String[]
+  correctIndex Int
+  explanation String  @default("")
+  similar     Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Assignment {
+  id          String         @id @default(cuid())
+  type        AssignmentType
+  title       String
+  description String?
+  duration    Int?
+  questionIds String[]
+  studentIds  String[]
+  active      Boolean        @default(true)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  @@index([type])
+}
+
+model Result {
+  id           String         @id @default(cuid())
+  studentId    String
+  student      User           @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  assignmentId String
+  title        String?
+  type         AssignmentType
+  percentage   Int
+  correctCount     Int @default(0)
+  wrongCount       Int @default(0)
+  unansweredCount  Int @default(0)
+  createdAt    DateTime       @default(now())
+
+  @@index([studentId])
+  @@index([assignmentId])
+}
+
+model ExitEvent {
+  id              String   @id @default(cuid())
+  studentId       String
+  student         User     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  studentName     String
+  assignmentId    String
+  assignmentTitle String
+  createdAt       DateTime @default(now())
+
+  @@index([studentId])
+}
+
+model Message {
+  id         String   @id @default(cuid())
+  senderId   String
+  sender     User     @relation("Sender", fields: [senderId], references: [id], onDelete: Cascade)
+  receiverId String
+  receiver   User     @relation("Receiver", fields: [receiverId], references: [id], onDelete: Cascade)
+  text       String
+  isRead     Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  @@index([senderId, receiverId])
+}
+
+model SchoolSettings {
+  id             Int    @id @default(1)
+  schoolName     String @default("مدرسه کیان")
+  tagline        String @default("یادگیری هوشمند برای پایه ششم")
+  supportContact String @default("")
+}
