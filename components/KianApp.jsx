@@ -2,12 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { useSession, signOut } from "next-auth/react";
-import { T, FONT, applyTheme } from "./theme";
+import { T, applyTheme } from "./theme";
 import { LoginPage } from "./LoginPage";
 import { AdminApp } from "./AdminApp";
 import { TeacherApp } from "./TeacherApp";
 import { StudentApp } from "./StudentApp";
 import { useIsDesktop } from "./responsive";
+import { LoadingScreen } from "./LoadingScreen";
 
 export function KianApp() {
   const { data: session, status } = useSession();
@@ -35,11 +36,7 @@ export function KianApp() {
   };
 
   if (status === "loading" || !themeReady) {
-    return (
-      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: T.bg, fontFamily: FONT, color: T.textFaint }}>
-        در حال بارگذاری...
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
   const user = session?.user;
