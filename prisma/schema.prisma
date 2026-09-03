@@ -59,6 +59,7 @@ model Assignment {
   title       String
   description String?
   duration    Int?
+  expiresAt   DateTime?
   questionIds String[]
   studentIds  String[]
   active      Boolean        @default(true)
@@ -79,6 +80,7 @@ model Result {
   correctCount     Int @default(0)
   wrongCount       Int @default(0)
   unansweredCount  Int @default(0)
+  answerDetail Json?
   createdAt    DateTime       @default(now())
 
   @@index([studentId])

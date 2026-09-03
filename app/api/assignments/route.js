@@ -40,7 +40,7 @@ export async function POST(req) {
   const type = typeFromQuery(body.type);
   if (!type) return NextResponse.json({ error: "type is required (exercise|exam)" }, { status: 400 });
 
-  const { title, description, duration, questionIds, studentIds, status } = body;
+  const { title, description, duration, expiresAt, questionIds, studentIds, status } = body;
 
   if (!title?.trim()) return NextResponse.json({ error: "عنوان را وارد کنید." }, { status: 400 });
   if (!Array.isArray(questionIds) || questionIds.length === 0)
@@ -54,6 +54,7 @@ export async function POST(req) {
       title: title.trim(),
       description: type === "EXERCISE" ? description || "" : null,
       duration: type === "EXAM" ? Number(duration) || 20 : null,
+      expiresAt: expiresAt ? new Date(expiresAt) : null,
       questionIds,
       studentIds,
       active: status !== "غیرفعال",

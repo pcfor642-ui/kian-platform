@@ -13,7 +13,7 @@ export async function PATCH(req, { params }) {
   if (!existing) return NextResponse.json({ error: "not found" }, { status: 404 });
 
   const body = await req.json();
-  const { title, description, duration, questionIds, studentIds, status } = body;
+  const { title, description, duration, expiresAt, questionIds, studentIds, status } = body;
 
   if (!title?.trim()) return NextResponse.json({ error: "عنوان را وارد کنید." }, { status: 400 });
   if (!Array.isArray(questionIds) || questionIds.length === 0)
@@ -27,6 +27,7 @@ export async function PATCH(req, { params }) {
       title: title.trim(),
       description: existing.type === "EXERCISE" ? description || "" : null,
       duration: existing.type === "EXAM" ? Number(duration) || 20 : null,
+      expiresAt: expiresAt ? new Date(expiresAt) : null,
       questionIds,
       studentIds,
       active: status !== "غیرفعال",

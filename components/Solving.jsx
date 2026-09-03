@@ -45,6 +45,41 @@ function OptionButton({ label, state, onClick, disabled }) {
   );
 }
 
+function ExamQuestionPane({ question, onAnswer }) {
+  const [selected, setSelected] = useState(null);
+
+  return (
+    <div>
+      <div style={{ fontSize: 15.5, color: T.text, fontWeight: 700, marginBottom: 16, wordBreak: "keep-all", overflowWrap: "break-word", lineHeight: 1.9 }}>
+        {question.text}
+      </div>
+
+      {question.options.map((opt, i) => (
+        <OptionButton
+          key={i}
+          label={opt}
+          state={selected === i ? "selected" : "idle"}
+          onClick={() => setSelected(i)}
+        />
+      ))}
+
+      <button
+        onClick={() => onAnswer(selected)}
+        disabled={selected === null}
+        style={{
+          ...primarySmallBtn,
+          width: "100%",
+          padding: "13px 0",
+          opacity: selected === null ? 0.5 : 1,
+          marginTop: 6,
+        }}
+      >
+        سؤال بعدی
+      </button>
+    </div>
+  );
+}
+
 function QuestionPane({ question, onAnswered, isSimilar }) {
   const [selected, setSelected] = useState(null);
   const [submitted, setSubmitted] = useState(false);
@@ -109,7 +144,7 @@ function QuestionPane({ question, onAnswered, isSimilar }) {
               توضیح معلم: {question.explanation}
             </div>
           )}
-          <button onClick={() => onAnswered(isCorrect)} style={{ ...primarySmallBtn, width: "100%", padding: "13px 0" }}>
+          <button onClick={() => onAnswered(isCorrect, selected)} style={{ ...primarySmallBtn, width: "100%", padding: "13px 0" }}>
             {isSimilar ? "ادامه" : "سؤال بعدی"}
           </button>
         </div>
@@ -130,25 +165,31 @@ export function SolvingView({ assignment, type, questions, student, onExit, onFi
   const current = qList[index];
   const progressPct = Math.round((index / qList.length) * 100);
 
-  const finalizeResult = (finalAnswers, unansweredCount) => {
+  const finalizeResult = (finalAnswers) => {
     if (finished) return;
     setFinished(true);
-    const correctCount = finalAnswers.filter((a) => a.isCorrect).length;
-    const wrongCount = finalAnswers.length - correctCount;
-    const denom = finalAnswers.length + unansweredCount || 1;
+    const answeredIds = new Set(finalAnswers.map((a) => a.questionId));
+    const withUnanswered = [
+      ...finalAnswers,
+      ...qList.filter((q) => !answeredIds.has(q.id)).map((q) => ({ questionId: q.id, selectedIndex: null, correctIndex: q.correctIndex, isCorrect: false })),
+    ];
+    const correctCount = withUnanswered.filter((a) => a.isCorrect).length;
+    const unansweredCount = withUnanswered.filter((a) => a.selectedIndex === null).length;
+    const wrongCount = withUnanswered.length - correctCount - unansweredCount;
     const result = {
       assignmentId: assignment.id,
       type,
       correctCount,
       wrongCount,
       unansweredCount,
-      percentage: Math.round((correctCount / denom) * 100),
+      percentage: Math.round((correctCount / (withUnanswered.length || 1)) * 100),
+      answerDetail: isExam ? withUnanswered : undefined,
     };
     onFinish(result);
   };
 
-  const goNextMain = (wasCorrect) => {
-    const next = [...answers, { questionId: current.id, isCorrect: wasCorrect }];
+  const goNextMain = (wasCorrect, selectedIndex) => {
+    const next = [...answers, { questionId: current.id, selectedIndex, correctIndex: current.correctIndex, isCorrect: wasCorrect }];
     setAnswers(next);
     if (!wasCorrect && current.similar && current.similar.text.trim()) {
       setShowSimilar(true);
@@ -157,19 +198,26 @@ export function SolvingView({ assignment, type, questions, student, onExit, onFi
     advance(next);
   };
 
+  const goNextExam = (selectedIndex) => {
+    const isCorrect = selectedIndex === current.correctIndex;
+    const next = [...answers, { questionId: current.id, selectedIndex, correctIndex: current.correctIndex, isCorrect }];
+    setAnswers(next);
+    advance(next);
+  };
+
   const advance = (finalAnswers) => {
     setShowSimilar(false);
     if (index + 1 < qList.length) {
       setIndex(index + 1);
     } else {
-      finalizeResult(finalAnswers, 0);
+      finalizeResult(finalAnswers);
     }
   };
 
   useEffect(() => {
     if (!isExam || finished || remaining === null) return;
     if (remaining <= 0) {
-      finalizeResult(answers, qList.length - answers.length);
+      finalizeResult(answers);
       return;
     }
     const t = setTimeout(() => setRemaining((r) => r - 1), 1000);
@@ -242,15 +290,19 @@ export function SolvingView({ assignment, type, questions, student, onExit, onFi
         </div>
       )}
 
-      {!showSimilar && <QuestionPane key={current.id + "-main"} question={current} onAnswered={goNextMain} />}
-      {showSimilar && (
+      {isExam && <ExamQuestionPane key={current.id} question={current} onAnswer={goNextExam} />}
+      {!isExam && !showSimilar && <QuestionPane key={current.id + "-main"} question={current} onAnswered={goNextMain} />}
+      {!isExam && showSimilar && (
         <QuestionPane key={current.id + "-similar"} question={current.similar} isSimilar onAnswered={() => advance([...answers])} />
       )}
     </div>
   );
 }
 
-export function ResultView({ result, onClose }) {
+export function ResultView({ result, questions, onClose }) {
+  const isExam = result.type === "exam";
+  const wrongDetail = (result.answerDetail || []).filter((a) => !a.isCorrect);
+
   return (
     <div style={{ paddingTop: 30, textAlign: "center" }}>
       <div
@@ -269,7 +321,9 @@ export function ResultView({ result, onClose }) {
           {result.percentage}٪
         </div>
       </div>
-      <div style={{ fontSize: 15, fontWeight: 700, color: T.text, marginBottom: 4 }}>آفرین! تمرین تموم شد</div>
+      <div style={{ fontSize: 15, fontWeight: 700, color: T.text, marginBottom: 4 }}>
+        {isExam ? "آزمون تموم شد" : "آفرین! تمرین تموم شد"}
+      </div>
       <div style={{ fontSize: 13, color: T.textSoft, marginBottom: 24 }}>عملکردت رو اینجا می‌بینی</div>
 
       <div style={{ display: "flex", justifyContent: "center", gap: 10, marginBottom: 26 }}>
@@ -277,6 +331,29 @@ export function ResultView({ result, onClose }) {
         <ResultStat value={result.wrongCount} label="پاسخ غلط" color={T.danger} />
         <ResultStat value={result.unansweredCount} label="بدون پاسخ" color={T.textFaint} />
       </div>
+
+      {isExam && wrongDetail.length > 0 && questions && (
+        <div style={{ textAlign: "right", marginBottom: 26 }}>
+          <div style={{ fontSize: 13.5, fontWeight: 700, color: T.text, marginBottom: 10, wordBreak: "keep-all" }}>
+            مرور سؤال‌های اشتباه
+          </div>
+          {wrongDetail.map((a, i) => {
+            const q = questions.find((qq) => qq.id === a.questionId);
+            if (!q) return null;
+            return (
+              <div key={i} style={{ background: T.dangerSoft, borderRadius: 14, padding: "12px 14px", marginBottom: 8 }}>
+                <div style={{ fontSize: 13, color: T.text, wordBreak: "keep-all", overflowWrap: "break-word", marginBottom: 8 }}>{q.text}</div>
+                <div style={{ fontSize: 12, color: T.danger, marginBottom: 3, wordBreak: "keep-all" }}>
+                  پاسخ تو: {a.selectedIndex === null ? "بدون پاسخ" : q.options[a.selectedIndex]}
+                </div>
+                <div style={{ fontSize: 12, color: T.success, wordBreak: "keep-all" }}>
+                  پاسخ صحیح: {q.options[a.correctIndex]}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       <button onClick={onClose} style={{ ...primarySmallBtn, padding: "12px 28px" }}>
         بازگشت

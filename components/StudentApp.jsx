@@ -148,11 +148,12 @@ export function StudentApp({ user, onLogout, dark, onToggleTheme }) {
 
   const teacher = useTeacher(user.teacherId);
 
-  const myExercises = allExercises.filter((it) => it.studentIds.includes(user.id));
-  const myExams = allExams.filter((it) => it.studentIds.includes(user.id));
   const myResults = results.filter((r) => r.studentId === user.id);
-
   const resultFor = (assignmentId) => myResults.find((r) => r.assignmentId === assignmentId);
+
+  const notExpiredOrDone = (it) => !it.expiresAt || new Date(it.expiresAt) >= new Date() || resultFor(it.id);
+  const myExercises = allExercises.filter((it) => it.studentIds.includes(user.id) && notExpiredOrDone(it));
+  const myExams = allExams.filter((it) => it.studentIds.includes(user.id) && notExpiredOrDone(it));
 
   const doneExercises = myExercises.filter((it) => resultFor(it.id)).length;
   const doneExams = myExams.filter((it) => resultFor(it.id)).length;
@@ -194,7 +195,7 @@ export function StudentApp({ user, onLogout, dark, onToggleTheme }) {
     return (
       <div style={{ position: "relative", minHeight: "100vh", background: T.bg, fontFamily: FONT, display: "flex", justifyContent: "center", padding: isDesktop ? "40px 24px" : "0 18px 24px" }}>
         <div style={{ width: "100%", maxWidth: isDesktop ? 480 : "none" }}>
-          <ResultView result={lastResult} onClose={() => setLastResult(null)} />
+          <ResultView result={lastResult} questions={questions} onClose={() => setLastResult(null)} />
         </div>
       </div>
     );

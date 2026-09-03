@@ -28,7 +28,7 @@ export async function POST(req) {
   if (session.user.role !== "STUDENT") return NextResponse.json({ error: "forbidden" }, { status: 403 });
 
   const body = await req.json();
-  const { assignmentId, type, correctCount, wrongCount, unansweredCount, percentage } = body;
+  const { assignmentId, type, correctCount, wrongCount, unansweredCount, percentage, answerDetail } = body;
 
   if (!assignmentId || !type) return NextResponse.json({ error: "invalid payload" }, { status: 400 });
 
@@ -47,6 +47,7 @@ export async function POST(req) {
       correctCount: correctCount ?? 0,
       wrongCount: wrongCount ?? 0,
       unansweredCount: unansweredCount ?? 0,
+      answerDetail: Array.isArray(answerDetail) ? answerDetail : undefined,
     },
   });
 
