@@ -45,11 +45,23 @@ function OptionButton({ label, state, onClick, disabled }) {
   );
 }
 
+function QuestionImage({ src }) {
+  if (!src) return null;
+  return (
+    <img
+      src={src}
+      alt=""
+      style={{ width: "100%", maxHeight: 240, objectFit: "contain", borderRadius: 14, border: `1px solid ${T.border}`, background: T.bg, marginBottom: 14 }}
+    />
+  );
+}
+
 function ExamQuestionPane({ question, onAnswer }) {
   const [selected, setSelected] = useState(null);
 
   return (
     <div>
+      <QuestionImage src={question.imageUrl} />
       <div style={{ fontSize: 15.5, color: T.text, fontWeight: 700, marginBottom: 16, wordBreak: "keep-all", overflowWrap: "break-word", lineHeight: 1.9 }}>
         {question.text}
       </div>
@@ -105,6 +117,7 @@ function QuestionPane({ question, onAnswered, isSimilar }) {
           سؤال مشابه
         </div>
       )}
+      <QuestionImage src={question.imageUrl} />
       <div style={{ fontSize: 15.5, color: T.text, fontWeight: 700, marginBottom: 16, wordBreak: "keep-all", overflowWrap: "break-word", lineHeight: 1.9 }}>
         {question.text}
       </div>

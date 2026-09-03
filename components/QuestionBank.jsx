@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Search, Plus, Pencil, Trash2, Wand2, ImagePlus, Check, X } from "lucide-react";
 import { T, FONT } from "./theme";
 import {
@@ -111,7 +111,7 @@ export function QuestionBank({ roleLabel }) {
   );
 
   const openNew = () => {
-    setEditing({ id: null, text: "", options: ["", "", "", ""], correctIndex: 0, explanation: "", similar: [] });
+    setEditing({ id: null, text: "", options: ["", "", "", ""], correctIndex: 0, explanation: "", similar: [], imageUrl: null });
     setView("form");
   };
 
@@ -158,6 +158,13 @@ export function QuestionBank({ roleLabel }) {
 
       {filtered.map((q) => (
         <div key={q.id} style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 16, padding: "14px 16px", marginBottom: 10 }}>
+          {q.imageUrl && (
+            <img
+              src={q.imageUrl}
+              alt=""
+              style={{ width: "100%", maxHeight: 160, objectFit: "cover", borderRadius: 12, marginBottom: 10 }}
+            />
+          )}
           <div style={{ fontSize: 13.5, color: T.text, wordBreak: "keep-all", overflowWrap: "break-word", marginBottom: 8 }}>
             {q.text}
           </div>
@@ -186,7 +193,29 @@ function QuestionForm({ initial, onCancel, onSave }) {
   const [pasteText, setPasteText] = useState("");
   const [analyzing, setAnalyzing] = useState(false);
   const [generatingSimilar, setGeneratingSimilar] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
   const [error, setError] = useState("");
+  const imageInputRef = useRef(null);
+
+  const handleImageChange = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setUploadingImage(true);
+    setError("");
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("kind", "question-image");
+      const res = await fetch("/api/upload", { method: "POST", body: fd });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "خطا در آپلود تصویر.");
+      setQ((prev) => ({ ...prev, imageUrl: data.url }));
+    } catch (err) {
+      setError(err.message || "آپلود تصویر ممکن نشد.");
+    }
+    setUploadingImage(false);
+  };
 
   const setOption = (i, val) => {
     const next = [...q.options];
@@ -420,8 +449,32 @@ function QuestionForm({ initial, onCancel, onSave }) {
         </button>
       )}
 
-      <button style={{ ...ghostSmallBtn, marginBottom: 16 }}>
-        <ImagePlus size={14} /> افزودن تصویر (اختیاری)
+      {q.imageUrl && (
+        <div style={{ position: "relative", marginBottom: 16 }}>
+          <img src={q.imageUrl} alt="" style={{ width: "100%", maxHeight: 220, objectFit: "contain", borderRadius: 14, border: `1px solid ${T.border}`, background: T.bg }} />
+          <button
+            onClick={() => setQ({ ...q, imageUrl: null })}
+            style={{
+              position: "absolute",
+              top: 8,
+              left: 8,
+              border: "none",
+              borderRadius: 8,
+              background: "rgba(0,0,0,0.55)",
+              color: "#fff",
+              padding: 5,
+              cursor: "pointer",
+              display: "flex",
+            }}
+          >
+            <X size={14} />
+          </button>
+        </div>
+      )}
+
+      <input ref={imageInputRef} type="file" accept="image/*" onChange={handleImageChange} style={{ display: "none" }} />
+      <button onClick={() => imageInputRef.current?.click()} disabled={uploadingImage} style={{ ...ghostSmallBtn, marginBottom: 16, opacity: uploadingImage ? 0.6 : 1 }}>
+        <ImagePlus size={14} /> {uploadingImage ? "در حال آپلود..." : q.imageUrl ? "تعویض تصویر" : "افزودن تصویر (اختیاری)"}
       </button>
 
       {error && <div style={{ color: T.danger, fontSize: 12.5, marginBottom: 10 }}>{error}</div>}

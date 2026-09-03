@@ -49,6 +49,7 @@ model Question {
   correctIndex Int
   explanation String  @default("")
   similar     Json?
+  imageUrl    String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
