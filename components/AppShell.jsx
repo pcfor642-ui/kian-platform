@@ -8,23 +8,17 @@ import { useIsDesktop } from "./responsive";
 
 function Logomark({ size = 30 }) {
   return (
-    <div
+    <img
+      src="/logo.png"
+      alt="کیان"
       style={{
         width: size,
         height: size,
         minWidth: size,
-        borderRadius: size * 0.32,
-        background: `linear-gradient(135deg, ${T.blue}, ${T.purple})`,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        color: "#fff",
-        fontWeight: 700,
-        fontSize: size * 0.42,
+        objectFit: "contain",
+        filter: "drop-shadow(0 1px 1px rgba(255,255,255,0.6)) drop-shadow(0 2px 4px rgba(20,30,60,0.25))",
       }}
-    >
-      ک
-    </div>
+    />
   );
 }
 

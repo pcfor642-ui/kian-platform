@@ -8,7 +8,7 @@ import { useAssignments, useQuestions, useResults, useExitEvents, useMessages } 
 import { SolvingView, ResultView } from "./Solving";
 import { ChatViewWithRead } from "./Messages";
 import { useIsDesktop } from "./responsive";
-import { Sidebar, DesktopTopBar } from "./AppShell";
+import { Sidebar, DesktopTopBar, Logomark } from "./AppShell";
 
 function ProgressLine({ label, value, total, suffix = "", color }) {
   const pct = Math.min(100, Math.round((value / total) * 100));
@@ -319,7 +319,10 @@ export function StudentApp({ user, onLogout, dark, onToggleTheme }) {
   return (
     <div style={{ position: "relative", minHeight: 560, background: T.bg, fontFamily: FONT, paddingBottom: 84, overflow: "hidden" }}>
       <div style={{ padding: "18px 18px 0", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <span style={{ fontWeight: 700, fontSize: 15, color: T.text }}>کیان</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <Logomark size={24} />
+          <span style={{ fontWeight: 700, fontSize: 15, color: T.text }}>کیان</span>
+        </div>
         <ThemeToggle dark={dark} onToggle={onToggleTheme} size={16} />
       </div>
 

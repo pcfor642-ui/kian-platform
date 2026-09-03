@@ -59,23 +59,18 @@ export function LoginPage({ dark, onToggleTheme }) {
         }}
       >
         <div style={{ textAlign: "center", marginBottom: 28 }}>
-          <div
+          <img
+            src="/logo.png"
+            alt="کیان"
             style={{
-              width: 52,
-              height: 52,
-              borderRadius: 16,
-              background: `linear-gradient(135deg, ${T.blue}, ${T.purple})`,
-              margin: "0 auto 16px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              color: "#fff",
-              fontSize: 20,
-              fontWeight: 700,
+              width: 76,
+              height: 76,
+              objectFit: "contain",
+              margin: "0 auto 14px",
+              display: "block",
+              filter: "drop-shadow(0 1px 1px rgba(255,255,255,0.6)) drop-shadow(0 3px 8px rgba(20,30,60,0.22))",
             }}
-          >
-            ک
-          </div>
+          />
           <h1 style={{ fontSize: 22, fontWeight: 800, letterSpacing: "-0.01em", color: T.text, margin: 0, wordBreak: "keep-all" }}>
             ورود به کیان
           </h1>

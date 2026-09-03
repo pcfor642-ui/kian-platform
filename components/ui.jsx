@@ -208,7 +208,14 @@ export function Drawer({ open, onClose, items, active, onSelect, footer }) {
         }}
       >
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18 }}>
-          <span style={{ fontWeight: 700, color: T.text, fontSize: 15 }}>کیان</span>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <img
+              src="/logo.png"
+              alt="کیان"
+              style={{ width: 24, height: 24, objectFit: "contain", filter: "drop-shadow(0 2px 4px rgba(20,30,60,0.25))" }}
+            />
+            <span style={{ fontWeight: 700, color: T.text, fontSize: 15 }}>کیان</span>
+          </div>
           <button onClick={onClose} style={iconBtn}>
             <X size={18} />
           </button>
