@@ -226,7 +226,7 @@ function PersonForm({ roleLabel, initial, error, teacherOptions, showTeacherSele
               padding: "10px 0",
               borderRadius: 12,
               border: `1px solid ${form.status === s ? T.blue : T.border}`,
-              background: form.status === s ? T.blueSoft : "#fff",
+              background: form.status === s ? T.blueSoft : T.surface,
               color: form.status === s ? T.blue : T.textSoft,
               fontFamily: FONT,
               fontSize: 13,

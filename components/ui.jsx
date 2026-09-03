@@ -3,12 +3,16 @@
 import { Menu, X, Bell, Sun, Moon, Check } from "lucide-react";
 import { T, FONT } from "./theme";
 
+// These are exported as plain-looking objects but every theme-dependent
+// value is a getter, so toggling dark mode (which mutates T in place)
+// is reflected the next time React reads style.xxx during render — a
+// literal `color: T.text` here would freeze at first import instead.
 export const fieldLabel = {
   display: "block",
   fontSize: 13,
-  color: T.textSoft,
   marginBottom: 6,
   fontFamily: FONT,
+  get color() { return T.textSoft; },
 };
 
 export const fieldInput = {
@@ -16,21 +20,21 @@ export const fieldInput = {
   boxSizing: "border-box",
   padding: "12px 14px",
   borderRadius: 12,
-  border: `1px solid ${T.border}`,
-  background: "#fff",
   fontFamily: FONT,
   fontSize: 14,
-  color: T.text,
   outline: "none",
+  get border() { return `1px solid ${T.border}`; },
+  get background() { return T.surface; },
+  get color() { return T.text; },
 };
 
 export const iconBtn = {
   border: "none",
   background: "transparent",
-  color: T.textSoft,
   cursor: "pointer",
   padding: 6,
   display: "flex",
+  get color() { return T.textSoft; },
 };
 
 export const primaryIconBtn = {
@@ -38,12 +42,12 @@ export const primaryIconBtn = {
   height: 40,
   borderRadius: 12,
   border: "none",
-  background: `linear-gradient(135deg, ${T.blue}, ${T.purple})`,
   color: "#fff",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
   cursor: "pointer",
+  get background() { return `linear-gradient(135deg, ${T.blue}, ${T.purple})`; },
 };
 
 export const ghostSmallBtn = {
@@ -51,25 +55,25 @@ export const ghostSmallBtn = {
   alignItems: "center",
   gap: 4,
   fontSize: 12,
-  border: `1px solid ${T.border}`,
-  background: "#fff",
-  color: T.textSoft,
   borderRadius: 10,
   padding: "7px 12px",
   fontFamily: FONT,
   cursor: "pointer",
+  get border() { return `1px solid ${T.border}`; },
+  get background() { return T.surface; },
+  get color() { return T.textSoft; },
 };
 
 export const primarySmallBtn = {
   fontSize: 12.5,
   border: "none",
-  background: T.blue,
   color: "#fff",
   borderRadius: 10,
   padding: "9px 14px",
   fontFamily: FONT,
   fontWeight: 700,
   cursor: "pointer",
+  get background() { return T.blue; },
 };
 
 export const aiButton = {
@@ -78,9 +82,6 @@ export const aiButton = {
   gap: 6,
   width: "100%",
   justifyContent: "center",
-  border: `1px solid ${T.purple}`,
-  background: T.purpleSoft,
-  color: T.purple,
   borderRadius: 12,
   padding: "11px 0",
   fontFamily: FONT,
@@ -88,6 +89,9 @@ export const aiButton = {
   fontWeight: 700,
   cursor: "pointer",
   marginBottom: 16,
+  get border() { return `1px solid ${T.purple}`; },
+  get background() { return T.purpleSoft; },
+  get color() { return T.purple; },
 };
 
 export const logoutBtn = {
@@ -98,10 +102,10 @@ export const logoutBtn = {
   justifyContent: "center",
   padding: "12px 0",
   borderRadius: 14,
-  border: `1px solid ${T.dangerSoft}`,
-  background: T.dangerSoft,
-  color: T.danger,
   fontFamily: FONT,
+  get border() { return `1px solid ${T.dangerSoft}`; },
+  get background() { return T.dangerSoft; },
+  get color() { return T.danger; },
   fontSize: 13.5,
   cursor: "pointer",
 };
@@ -110,12 +114,12 @@ export function GlassPanel({ children, style }) {
   return (
     <div
       style={{
-        background: "rgba(255,255,255,0.6)",
+        background: T.glass,
         backdropFilter: "blur(14px)",
         WebkitBackdropFilter: "blur(14px)",
-        border: `1px solid rgba(255,255,255,0.8)`,
+        border: `1px solid ${T.glassBorder}`,
         borderRadius: 20,
-        boxShadow: "0 12px 30px -18px rgba(47,95,209,0.35)",
+        boxShadow: "0 12px 30px -18px rgba(20,30,60,0.35)",
         ...style,
       }}
     >
@@ -339,7 +343,7 @@ export function CheckRow({ label, sub, checked, onToggle }) {
         padding: "10px 12px",
         borderRadius: 12,
         border: `1px solid ${checked ? T.blue : T.border}`,
-        background: checked ? T.blueSoft : "#fff",
+        background: checked ? T.blueSoft : T.surface,
         marginBottom: 8,
         cursor: "pointer",
         textAlign: "right",
@@ -353,7 +357,7 @@ export function CheckRow({ label, sub, checked, onToggle }) {
           minWidth: 20,
           borderRadius: 6,
           border: `1px solid ${checked ? T.blue : T.border}`,
-          background: checked ? T.blue : "#fff",
+          background: checked ? T.blue : T.surface,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",

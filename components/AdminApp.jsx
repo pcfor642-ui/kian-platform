@@ -64,7 +64,7 @@ export function AdminApp({ user, onLogout, dark, onToggleTheme }) {
           }}
         >
           <span style={{ wordBreak: "keep-all" }}>مشاهده پنل استاد {teacherUser?.name} …</span>
-          <button onClick={() => setViewingTeacherId(null)} style={{ background: "#fff", padding: "4px 10px", borderRadius: 10, border: `1px solid ${T.border}`, cursor: "pointer", fontFamily: FONT, fontSize: 12 }}>
+          <button onClick={() => setViewingTeacherId(null)} style={{ background: T.surface, color: T.text, padding: "4px 10px", borderRadius: 10, border: `1px solid ${T.border}`, cursor: "pointer", fontFamily: FONT, fontSize: 12 }}>
             بازگشت به پنل مدیریت
           </button>
         </div>

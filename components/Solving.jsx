@@ -14,7 +14,7 @@ function formatDuration(totalSeconds) {
 
 function OptionButton({ label, state, onClick, disabled }) {
   const styles = {
-    idle: { border: T.border, bg: "#fff", color: T.text },
+    idle: { border: T.border, bg: T.surface, color: T.text },
     selected: { border: T.blue, bg: T.blueSoft, color: T.text },
     correct: { border: T.success, bg: T.successSoft, color: T.success },
     incorrect: { border: T.danger, bg: T.dangerSoft, color: T.danger },

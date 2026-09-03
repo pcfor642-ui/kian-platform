@@ -71,7 +71,7 @@ function BottomNav({ tabs, active, onSelect }) {
       <div
         style={{
           margin: "0 14px 14px",
-          background: "rgba(255,255,255,0.85)",
+          background: T.glass,
           backdropFilter: "blur(16px)",
           WebkitBackdropFilter: "blur(16px)",
           border: `1px solid ${T.border}`,
