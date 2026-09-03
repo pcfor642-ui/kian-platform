@@ -6,7 +6,8 @@ import {
   ClipboardList, Settings, TrendingUp, LogOut, User,
 } from "lucide-react";
 import { T, FONT } from "./theme";
-import { GlassPanel, SectionTitle, StatRow, Timeline, Drawer, TopHeader, PlaceholderPage, AccountCard, logoutBtn } from "./ui";
+import { GlassPanel, SectionTitle, StatRow, Timeline, PlaceholderPage, AccountCard, logoutBtn } from "./ui";
+import { AppShell } from "./AppShell";
 import { useUsers, useAssignments, useResults, useExitEvents } from "./api-hooks";
 import { QuestionBank } from "./QuestionBank";
 import { AssignmentBank } from "./Assignments";
@@ -17,7 +18,6 @@ import { SettingsPage } from "./SettingsPage";
 import { TeacherApp } from "./TeacherApp";
 
 export function AdminApp({ user, onLogout, dark, onToggleTheme }) {
-  const [drawerOpen, setDrawerOpen] = useState(false);
   const [page, setPage] = useState("home");
   const [viewingTeacherId, setViewingTeacherId] = useState(null);
 
@@ -48,7 +48,7 @@ export function AdminApp({ user, onLogout, dark, onToggleTheme }) {
   if (viewingTeacherId) {
     const teacherUser = teachers.find((u) => u.id === viewingTeacherId);
     return (
-      <div style={{ position: "relative", minHeight: 560, background: T.bg, fontFamily: FONT }}>
+      <div style={{ position: "relative", minHeight: "100vh", background: T.bg, fontFamily: FONT }}>
         <div
           style={{
             background: T.warningSoft,
@@ -82,94 +82,80 @@ export function AdminApp({ user, onLogout, dark, onToggleTheme }) {
   }
 
   return (
-    <div style={{ position: "relative", minHeight: 560, background: T.bg, fontFamily: FONT, overflow: "hidden" }}>
-      <TopHeader onMenu={() => setDrawerOpen(true)} title="پنل مدیریت" dark={dark} onToggleTheme={onToggleTheme} />
-      <div style={{ padding: "0 18px 24px" }}>
-        {page === "home" && (
-          <>
-            <GlassPanel style={{ padding: "20px 18px" }}>
-              <div style={{ fontSize: 17, fontWeight: 800, letterSpacing: "-0.01em", color: T.text }}>سلام، {user.name}</div>
-              <div style={{ fontSize: 13, color: T.textSoft, marginTop: 4 }}>
-                امروز {teacherCount} معلم و {studentCount} دانش‌آموز فعال هستند.
-              </div>
-            </GlassPanel>
-
-            <SectionTitle>آمار کلی</SectionTitle>
-            <StatRow
-              items={[
-                { icon: <GraduationCap size={18} />, value: teacherCount, label: "معلم فعال" },
-                { icon: <Users size={18} />, value: studentCount, label: "دانش‌آموز" },
-                { icon: <ClipboardList size={18} />, value: exercises.filter((e) => e.status === "فعال").length, label: "تمرین فعال", color: T.purple },
-                { icon: <FileText size={18} />, value: exams.filter((e) => e.status === "فعال").length, label: "آزمون فعال", color: T.warning },
-              ]}
-            />
-
-            <SectionTitle>فعالیت‌های اخیر</SectionTitle>
-            <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 18, padding: "16px 16px" }}>
-              {results.length === 0 ? (
-                <div style={{ fontSize: 13, color: T.textFaint, textAlign: "center", padding: "10px 0" }}>
-                  هنوز فعالیتی ثبت نشده است.
-                </div>
-              ) : (
-                <Timeline
-                  items={results.slice(0, 4).map((r) => {
-                    const src = r.type === "exam" ? exams : exercises;
-                    const title = src.find((it) => it.id === r.assignmentId)?.title || "فعالیت";
-                    const student = allStudents.find((s) => s.id === r.studentId);
-                    return {
-                      title: `${student?.name || "دانش‌آموز"} — ${r.type === "exam" ? "آزمون" : "تمرین"} «${title}» را با ${r.percentage}٪ تکمیل کرد.`,
-                      time: new Date(r.createdAt).toLocaleDateString("fa-IR"),
-                    };
-                  })}
-                />
-              )}
+    <AppShell title="پنل مدیریت" menu={menu} active={page} onSelect={setPage} dark={dark} onToggleTheme={onToggleTheme}>
+      {page === "home" && (
+        <>
+          <GlassPanel style={{ padding: "20px 18px" }}>
+            <div style={{ fontSize: 17, fontWeight: 800, letterSpacing: "-0.01em", color: T.text }}>سلام، {user.name}</div>
+            <div style={{ fontSize: 13, color: T.textSoft, marginTop: 4 }}>
+              امروز {teacherCount} معلم و {studentCount} دانش‌آموز فعال هستند.
             </div>
-          </>
-        )}
+          </GlassPanel>
 
-        {page === "teachers" && (
-          <PeopleManager roleLabel="معلم‌ها" filterRole="TEACHER" onEnterPanel={(t) => setViewingTeacherId(t.id)} />
-        )}
-
-        {page === "students" && (
-          <PeopleManager roleLabel="دانش‌آموزان" filterRole="STUDENT" teacherOptions={teachers} />
-        )}
-
-        {page === "account" && (
-          <div style={{ paddingTop: 8 }}>
-            <SectionTitle>حساب کاربری</SectionTitle>
-            <AccountCard name={user.name} username={user.username} role="مدیر" />
-            <button onClick={onLogout} style={logoutBtn}>
-              <LogOut size={16} /> خروج از حساب
-            </button>
-          </div>
-        )}
-
-        {page === "questions" && <QuestionBank roleLabel="مدیر" />}
-        {page === "exercises" && <AssignmentBank type="exercise" students={allStudents} />}
-        {page === "exams" && <AssignmentBank type="exam" students={allStudents} />}
-        {page === "results" && <ResultsPage students={allStudents} exercises={exercises} exams={exams} results={results} exitEvents={exitEvents} />}
-        {page === "messages" && <AdminMessages user={user} teachers={teachers} students={allStudents} />}
-        {page === "settings" && <SettingsPage />}
-
-        {!["home", "teachers", "students", "account", "questions", "exercises", "exams", "results", "messages", "settings"].includes(page) && (
-          <PlaceholderPage
-            label={menu.find((m) => m.key === page)?.label}
-            hint="این بخش در نسخه‌ی نمونه پیاده‌سازی نشده — در نسخه‌ی واقعی تکمیل می‌شود."
+          <SectionTitle>آمار کلی</SectionTitle>
+          <StatRow
+            items={[
+              { icon: <GraduationCap size={18} />, value: teacherCount, label: "معلم فعال" },
+              { icon: <Users size={18} />, value: studentCount, label: "دانش‌آموز" },
+              { icon: <ClipboardList size={18} />, value: exercises.filter((e) => e.status === "فعال").length, label: "تمرین فعال", color: T.purple },
+              { icon: <FileText size={18} />, value: exams.filter((e) => e.status === "فعال").length, label: "آزمون فعال", color: T.warning },
+            ]}
           />
-        )}
-      </div>
 
-      <Drawer
-        open={drawerOpen}
-        onClose={() => setDrawerOpen(false)}
-        items={menu}
-        active={page}
-        onSelect={(k) => {
-          setPage(k);
-          setDrawerOpen(false);
-        }}
-      />
-    </div>
+          <SectionTitle>فعالیت‌های اخیر</SectionTitle>
+          <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 18, padding: "16px 16px" }}>
+            {results.length === 0 ? (
+              <div style={{ fontSize: 13, color: T.textFaint, textAlign: "center", padding: "10px 0" }}>
+                هنوز فعالیتی ثبت نشده است.
+              </div>
+            ) : (
+              <Timeline
+                items={results.slice(0, 4).map((r) => {
+                  const src = r.type === "exam" ? exams : exercises;
+                  const title = src.find((it) => it.id === r.assignmentId)?.title || "فعالیت";
+                  const student = allStudents.find((s) => s.id === r.studentId);
+                  return {
+                    title: `${student?.name || "دانش‌آموز"} — ${r.type === "exam" ? "آزمون" : "تمرین"} «${title}» را با ${r.percentage}٪ تکمیل کرد.`,
+                    time: new Date(r.createdAt).toLocaleDateString("fa-IR"),
+                  };
+                })}
+              />
+            )}
+          </div>
+        </>
+      )}
+
+      {page === "teachers" && (
+        <PeopleManager roleLabel="معلم‌ها" filterRole="TEACHER" onEnterPanel={(t) => setViewingTeacherId(t.id)} />
+      )}
+
+      {page === "students" && (
+        <PeopleManager roleLabel="دانش‌آموزان" filterRole="STUDENT" teacherOptions={teachers} />
+      )}
+
+      {page === "account" && (
+        <div style={{ paddingTop: 8 }}>
+          <SectionTitle>حساب کاربری</SectionTitle>
+          <AccountCard name={user.name} username={user.username} role="مدیر" />
+          <button onClick={onLogout} style={logoutBtn}>
+            <LogOut size={16} /> خروج از حساب
+          </button>
+        </div>
+      )}
+
+      {page === "questions" && <QuestionBank roleLabel="مدیر" />}
+      {page === "exercises" && <AssignmentBank type="exercise" students={allStudents} />}
+      {page === "exams" && <AssignmentBank type="exam" students={allStudents} />}
+      {page === "results" && <ResultsPage students={allStudents} exercises={exercises} exams={exams} results={results} exitEvents={exitEvents} />}
+      {page === "messages" && <AdminMessages user={user} teachers={teachers} students={allStudents} />}
+      {page === "settings" && <SettingsPage />}
+
+      {!["home", "teachers", "students", "account", "questions", "exercises", "exams", "results", "messages", "settings"].includes(page) && (
+        <PlaceholderPage
+          label={menu.find((m) => m.key === page)?.label}
+          hint="این بخش در نسخه‌ی نمونه پیاده‌سازی نشده — در نسخه‌ی واقعی تکمیل می‌شود."
+        />
+      )}
+    </AppShell>
   );
 }

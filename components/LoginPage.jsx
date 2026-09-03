@@ -33,7 +33,7 @@ export function LoginPage({ dark, onToggleTheme }) {
     <div
       style={{
         position: "relative",
-        minHeight: 560,
+        minHeight: "100vh",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",

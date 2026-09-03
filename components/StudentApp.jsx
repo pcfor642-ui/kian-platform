@@ -7,6 +7,8 @@ import { GlassPanel, SectionTitle, Timeline, ThemeToggle, EmptyNote, AccountCard
 import { useAssignments, useQuestions, useResults, useExitEvents, useMessages } from "./api-hooks";
 import { SolvingView, ResultView } from "./Solving";
 import { ChatViewWithRead } from "./Messages";
+import { useIsDesktop } from "./responsive";
+import { Sidebar, DesktopTopBar } from "./AppShell";
 
 function ProgressLine({ label, value, total, suffix = "", color }) {
   const pct = Math.min(100, Math.round((value / total) * 100));
@@ -132,6 +134,7 @@ function BottomNav({ tabs, active, onSelect }) {
 }
 
 export function StudentApp({ user, onLogout, dark, onToggleTheme }) {
+  const isDesktop = useIsDesktop();
   const [tab, setTab] = useState("home");
   const [active, setActive] = useState(null);
   const [lastResult, setLastResult] = useState(null);
@@ -171,37 +174,35 @@ export function StudentApp({ user, onLogout, dark, onToggleTheme }) {
 
   if (active) {
     return (
-      <div style={{ position: "relative", minHeight: 560, background: T.bg, fontFamily: FONT, padding: "0 18px 24px" }}>
-        <SolvingView
-          assignment={active.item}
-          type={active.type}
-          questions={questions}
-          student={user}
-          onExit={() => setActive(null)}
-          onFinish={finishAssignment}
-          onExitEvent={addExitEvent}
-        />
+      <div style={{ position: "relative", minHeight: "100vh", background: T.bg, fontFamily: FONT, display: "flex", justifyContent: "center", padding: isDesktop ? "40px 24px" : "0 18px 24px" }}>
+        <div style={{ width: "100%", maxWidth: isDesktop ? 640 : "none" }}>
+          <SolvingView
+            assignment={active.item}
+            type={active.type}
+            questions={questions}
+            student={user}
+            onExit={() => setActive(null)}
+            onFinish={finishAssignment}
+            onExitEvent={addExitEvent}
+          />
+        </div>
       </div>
     );
   }
 
   if (lastResult) {
     return (
-      <div style={{ position: "relative", minHeight: 560, background: T.bg, fontFamily: FONT, padding: "0 18px 24px" }}>
-        <ResultView result={lastResult} onClose={() => setLastResult(null)} />
+      <div style={{ position: "relative", minHeight: "100vh", background: T.bg, fontFamily: FONT, display: "flex", justifyContent: "center", padding: isDesktop ? "40px 24px" : "0 18px 24px" }}>
+        <div style={{ width: "100%", maxWidth: isDesktop ? 480 : "none" }}>
+          <ResultView result={lastResult} onClose={() => setLastResult(null)} />
+        </div>
       </div>
     );
   }
 
-  return (
-    <div style={{ position: "relative", minHeight: 560, background: T.bg, fontFamily: FONT, paddingBottom: 84, overflow: "hidden" }}>
-      <div style={{ padding: "18px 18px 0", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <span style={{ fontWeight: 700, fontSize: 15, color: T.text }}>کیان</span>
-        <ThemeToggle dark={dark} onToggle={onToggleTheme} size={16} />
-      </div>
-
-      <div style={{ padding: "0 18px 8px" }}>
-        {tab === "home" && (
+  const tabContent = (
+    <>
+      {tab === "home" && (
           <>
             <div style={{ marginTop: 14 }}>
               <div style={{ fontSize: 20, fontWeight: 800, letterSpacing: "-0.01em", color: T.text }}>سلام، {user.name.split(" ")[0]}</div>
@@ -298,7 +299,31 @@ export function StudentApp({ user, onLogout, dark, onToggleTheme }) {
             </button>
           </div>
         )}
+    </>
+  );
+
+  if (isDesktop) {
+    return (
+      <div style={{ display: "flex", minHeight: "100vh", background: T.bg, fontFamily: FONT }}>
+        <Sidebar items={tabs} active={tab} onSelect={setTab} />
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
+          <DesktopTopBar title="کیان" dark={dark} onToggleTheme={onToggleTheme} />
+          <div style={{ flex: 1, padding: "30px 40px 60px", maxWidth: 780, width: "100%", margin: "0 auto", boxSizing: "border-box" }}>
+            {tabContent}
+          </div>
+        </div>
       </div>
+    );
+  }
+
+  return (
+    <div style={{ position: "relative", minHeight: 560, background: T.bg, fontFamily: FONT, paddingBottom: 84, overflow: "hidden" }}>
+      <div style={{ padding: "18px 18px 0", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <span style={{ fontWeight: 700, fontSize: 15, color: T.text }}>کیان</span>
+        <ThemeToggle dark={dark} onToggle={onToggleTheme} size={16} />
+      </div>
+
+      <div style={{ padding: "0 18px 8px" }}>{tabContent}</div>
 
       <BottomNav tabs={tabs} active={tab} onSelect={setTab} />
     </div>

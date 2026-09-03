@@ -7,9 +7,11 @@ import { LoginPage } from "./LoginPage";
 import { AdminApp } from "./AdminApp";
 import { TeacherApp } from "./TeacherApp";
 import { StudentApp } from "./StudentApp";
+import { useIsDesktop } from "./responsive";
 
 export function KianApp() {
   const { data: session, status } = useSession();
+  const isDesktop = useIsDesktop();
   const [dark, setDark] = useState(false);
   const [themeReady, setThemeReady] = useState(false);
 
@@ -34,7 +36,7 @@ export function KianApp() {
 
   if (status === "loading" || !themeReady) {
     return (
-      <div style={{ minHeight: 560, display: "flex", alignItems: "center", justifyContent: "center", background: T.bg, fontFamily: FONT, color: T.textFaint }}>
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: T.bg, fontFamily: FONT, color: T.textFaint }}>
         در حال بارگذاری...
       </div>
     );
@@ -45,7 +47,11 @@ export function KianApp() {
   return (
     <div
       dir="rtl"
-      style={{ direction: "rtl", unicodeBidi: "isolate", maxWidth: 420, margin: "0 auto", boxShadow: `0 0 0 1px ${T.border}`, borderRadius: 26, overflow: "hidden" }}
+      style={
+        isDesktop
+          ? { direction: "rtl", unicodeBidi: "isolate", minHeight: "100vh" }
+          : { direction: "rtl", unicodeBidi: "isolate", maxWidth: 420, margin: "0 auto", boxShadow: `0 0 0 1px ${T.border}`, borderRadius: 26, overflow: "hidden" }
+      }
     >
       {!user && <LoginPage dark={dark} onToggleTheme={toggleTheme} />}
       {user && user.role === "ADMIN" && (
