@@ -111,12 +111,12 @@ export function QuestionBank({ roleLabel }) {
   );
 
   const openNew = () => {
-    setEditing({ id: null, text: "", options: ["", "", "", ""], correctIndex: 0, explanation: "", similar: null });
+    setEditing({ id: null, text: "", options: ["", "", "", ""], correctIndex: 0, explanation: "", similar: [] });
     setView("form");
   };
 
   const openEdit = (q) => {
-    setEditing({ ...q, options: [...q.options] });
+    setEditing({ ...q, options: [...q.options], similar: (q.similar || []).map((s) => ({ ...s, options: [...s.options] })) });
     setView("form");
   };
 
@@ -178,17 +178,55 @@ export function QuestionBank({ roleLabel }) {
   );
 }
 
+const MAX_SIMILAR = 3;
+
 function QuestionForm({ initial, onCancel, onSave }) {
   const [q, setQ] = useState(initial);
   const [pasteOpen, setPasteOpen] = useState(false);
   const [pasteText, setPasteText] = useState("");
   const [analyzing, setAnalyzing] = useState(false);
+  const [generatingSimilar, setGeneratingSimilar] = useState(false);
   const [error, setError] = useState("");
 
   const setOption = (i, val) => {
     const next = [...q.options];
     next[i] = val;
     setQ({ ...q, options: next });
+  };
+
+  const addEmptySimilar = () => {
+    if (q.similar.length >= MAX_SIMILAR) return;
+    setQ({ ...q, similar: [...q.similar, { text: "", options: ["", "", "", ""], correctIndex: 0, explanation: "" }] });
+  };
+
+  const removeSimilar = (idx) => {
+    setQ({ ...q, similar: q.similar.filter((_, i) => i !== idx) });
+  };
+
+  const updateSimilar = (idx, patch) => {
+    setQ({ ...q, similar: q.similar.map((s, i) => (i === idx ? { ...s, ...patch } : s)) });
+  };
+
+  const generateSimilarWithAI = async () => {
+    if (!q.text.trim() || q.options.some((o) => !o.trim())) {
+      setError("قبل از تولید سؤال مشابه، متن سؤال و هر چهار گزینه را کامل کنید.");
+      return;
+    }
+    setGeneratingSimilar(true);
+    setError("");
+    try {
+      const res = await fetch("/api/ai/similar-questions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: q.text, options: q.options, correctIndex: q.correctIndex }),
+      });
+      if (!res.ok) throw new Error();
+      const items = await res.json();
+      setQ({ ...q, similar: items.slice(0, MAX_SIMILAR) });
+    } catch (e) {
+      setError("تولید سؤال مشابه با هوش مصنوعی ممکن نشد — می‌توانید دستی اضافه کنید.");
+    }
+    setGeneratingSimilar(false);
   };
 
   const applyPaste = async () => {
@@ -219,9 +257,13 @@ function QuestionForm({ initial, onCancel, onSave }) {
       setError("متن سؤال و هر چهار گزینه را کامل کنید.");
       return;
     }
+    if (q.similar.some((s) => s.text.trim() && s.options.some((o) => !o.trim()))) {
+      setError("برای هر سؤال مشابهی که متن دارد، هر چهار گزینه را هم کامل کنید.");
+      return;
+    }
     setError("");
     try {
-      await onSave(q);
+      await onSave({ ...q, similar: q.similar.filter((s) => s.text.trim()) });
     } catch (e) {
       setError(e.message || "خطایی رخ داد.");
     }
@@ -313,43 +355,41 @@ function QuestionForm({ initial, onCancel, onSave }) {
         style={{ ...fieldInput, resize: "vertical", marginBottom: 14 }}
       />
 
-      {!q.similar && (
-        <button
-          onClick={() =>
-            setQ({ ...q, similar: { text: "", options: ["", "", "", ""], correctIndex: 0, explanation: "" } })
-          }
-          style={{ ...ghostSmallBtn, marginBottom: 16 }}
-        >
-          <Plus size={13} /> افزودن سؤال مشابه
-        </button>
-      )}
+      <SectionTitleInline>سؤال‌های مشابه</SectionTitleInline>
+      <div style={{ fontSize: 11.5, color: T.textFaint, marginTop: 4, marginBottom: 10, wordBreak: "keep-all" }}>
+        وقتی دانش‌آموز جواب اصلی را در تمرین اشتباه بزند، یکی از این‌ها به‌جای دوباره‌سؤال‌کردن نشان داده می‌شود (حداکثر {MAX_SIMILAR} عدد).
+      </div>
 
-      {q.similar && (
-        <div style={{ background: T.bg, borderRadius: 16, padding: 14, marginBottom: 16 }}>
+      <button onClick={generateSimilarWithAI} disabled={generatingSimilar} style={{ ...aiButton, opacity: generatingSimilar ? 0.6 : 1 }}>
+        <Wand2 size={14} /> {generatingSimilar ? `در حال تولید ${MAX_SIMILAR} سؤال...` : `تولید ${MAX_SIMILAR} سؤال مشابه با هوش مصنوعی`}
+      </button>
+
+      {q.similar.map((s, idx) => (
+        <div key={idx} style={{ background: T.bg, borderRadius: 16, padding: 14, marginBottom: 10 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-            <SectionTitleInline>سؤال مشابه</SectionTitleInline>
-            <button onClick={() => setQ({ ...q, similar: null })} style={iconBtn}>
+            <SectionTitleInline>سؤال مشابه {idx + 1}</SectionTitleInline>
+            <button onClick={() => removeSimilar(idx)} style={iconBtn}>
               <X size={16} />
             </button>
           </div>
           <label style={fieldLabel}>متن سؤال مشابه</label>
           <textarea
-            value={q.similar.text}
-            onChange={(e) => setQ({ ...q, similar: { ...q.similar, text: e.target.value } })}
+            value={s.text}
+            onChange={(e) => updateSimilar(idx, { text: e.target.value })}
             rows={2}
             style={{ ...fieldInput, resize: "vertical", marginBottom: 10 }}
           />
-          {q.similar.options.map((opt, i) => (
+          {s.options.map((opt, i) => (
             <div key={i} style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 8 }}>
               <button
-                onClick={() => setQ({ ...q, similar: { ...q.similar, correctIndex: i } })}
+                onClick={() => updateSimilar(idx, { correctIndex: i })}
                 style={{
                   width: 26,
                   height: 26,
                   minWidth: 26,
                   borderRadius: 8,
-                  border: `1px solid ${q.similar.correctIndex === i ? T.success : T.border}`,
-                  background: q.similar.correctIndex === i ? T.successSoft : T.surface,
+                  border: `1px solid ${s.correctIndex === i ? T.success : T.border}`,
+                  background: s.correctIndex === i ? T.successSoft : T.surface,
                   color: T.success,
                   display: "flex",
                   alignItems: "center",
@@ -357,14 +397,14 @@ function QuestionForm({ initial, onCancel, onSave }) {
                   cursor: "pointer",
                 }}
               >
-                {q.similar.correctIndex === i && <Check size={12} />}
+                {s.correctIndex === i && <Check size={12} />}
               </button>
               <input
                 value={opt}
                 onChange={(e) => {
-                  const next = [...q.similar.options];
+                  const next = [...s.options];
                   next[i] = e.target.value;
-                  setQ({ ...q, similar: { ...q.similar, options: next } });
+                  updateSimilar(idx, { options: next });
                 }}
                 style={{ ...fieldInput, flex: 1, padding: "9px 12px" }}
                 placeholder={`گزینه ${["۱", "۲", "۳", "۴"][i]}`}
@@ -372,6 +412,12 @@ function QuestionForm({ initial, onCancel, onSave }) {
             </div>
           ))}
         </div>
+      ))}
+
+      {q.similar.length < MAX_SIMILAR && (
+        <button onClick={addEmptySimilar} style={{ ...ghostSmallBtn, marginTop: q.similar.length ? 0 : 12, marginBottom: 16 }}>
+          <Plus size={13} /> افزودن دستی سؤال مشابه ({q.similar.length}/{MAX_SIMILAR})
+        </button>
       )}
 
       <button style={{ ...ghostSmallBtn, marginBottom: 16 }}>

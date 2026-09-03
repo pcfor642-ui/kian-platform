@@ -158,6 +158,7 @@ export function SolvingView({ assignment, type, questions, student, onExit, onFi
   const [index, setIndex] = useState(0);
   const [answers, setAnswers] = useState([]);
   const [showSimilar, setShowSimilar] = useState(false);
+  const [pickedSimilar, setPickedSimilar] = useState(null);
   const [finished, setFinished] = useState(false);
   const isExam = type === "exam";
   const [remaining, setRemaining] = useState(isExam ? (assignment.duration || 20) * 60 : null);
@@ -191,7 +192,9 @@ export function SolvingView({ assignment, type, questions, student, onExit, onFi
   const goNextMain = (wasCorrect, selectedIndex) => {
     const next = [...answers, { questionId: current.id, selectedIndex, correctIndex: current.correctIndex, isCorrect: wasCorrect }];
     setAnswers(next);
-    if (!wasCorrect && current.similar && current.similar.text.trim()) {
+    const options = (current.similar || []).filter((s) => s.text?.trim());
+    if (!wasCorrect && options.length > 0) {
+      setPickedSimilar(options[Math.floor(Math.random() * options.length)]);
       setShowSimilar(true);
       return;
     }
@@ -292,8 +295,8 @@ export function SolvingView({ assignment, type, questions, student, onExit, onFi
 
       {isExam && <ExamQuestionPane key={current.id} question={current} onAnswer={goNextExam} />}
       {!isExam && !showSimilar && <QuestionPane key={current.id + "-main"} question={current} onAnswered={goNextMain} />}
-      {!isExam && showSimilar && (
-        <QuestionPane key={current.id + "-similar"} question={current.similar} isSimilar onAnswered={() => advance([...answers])} />
+      {!isExam && showSimilar && pickedSimilar && (
+        <QuestionPane key={current.id + "-similar"} question={pickedSimilar} isSimilar onAnswered={() => advance([...answers])} />
       )}
     </div>
   );
