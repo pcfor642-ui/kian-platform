@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Home, Users, BookOpen, ClipboardList, FileText, TrendingUp, MessageCircle, User, LogOut } from "lucide-react";
+import { Home, Users, BookOpen, ClipboardList, FileText, TrendingUp, MessageCircle, User, LogOut, Video } from "lucide-react";
 import { T, FONT } from "./theme";
 import { GlassPanel, SectionTitle, StatRow, PlaceholderPage, AccountCard, EmptyNote, logoutBtn, FollowUpRow } from "./ui";
 import { AppShell } from "./AppShell";
@@ -11,6 +11,7 @@ import { AssignmentBank } from "./Assignments";
 import { ResultsPage } from "./Results";
 import { TeacherMessages } from "./Messages";
 import { PeopleManager } from "./People";
+import { LectureManager } from "./Lectures";
 
 export function TeacherApp({ user, onLogout, impersonating, dark, onToggleTheme }) {
   const [page, setPage] = useState("home");
@@ -48,6 +49,7 @@ export function TeacherApp({ user, onLogout, impersonating, dark, onToggleTheme 
     { key: "exercises", label: "تمرین‌ها", icon: <ClipboardList size={18} /> },
     { key: "exams", label: "آزمون‌ها", icon: <FileText size={18} /> },
     { key: "results", label: "نتایج", icon: <TrendingUp size={18} /> },
+    { key: "lectures", label: "ویدیوهای آموزشی", icon: <Video size={18} /> },
     { key: "messages", label: "پیام‌ها", icon: <MessageCircle size={18} /> },
     { key: "account", label: "حساب کاربری", icon: <User size={18} /> },
   ];
@@ -108,9 +110,10 @@ export function TeacherApp({ user, onLogout, impersonating, dark, onToggleTheme 
       {page === "exercises" && <AssignmentBank type="exercise" students={myStudents} />}
       {page === "exams" && <AssignmentBank type="exam" students={myStudents} />}
       {page === "results" && <ResultsPage students={myStudents} exercises={exercises} exams={exams} results={results} exitEvents={exitEvents} />}
+      {page === "lectures" && <LectureManager students={myStudents} />}
       {page === "messages" && <TeacherMessages user={user} students={myStudents} />}
 
-      {!["home", "students", "account", "questions", "exercises", "exams", "results", "messages"].includes(page) && (
+      {!["home", "students", "account", "questions", "exercises", "exams", "results", "lectures", "messages"].includes(page) && (
         <PlaceholderPage
           label={menu.find((m) => m.key === page)?.label}
           hint="این بخش در نسخه‌ی نمونه پیاده‌سازی نشده — در نسخه‌ی واقعی تکمیل می‌شود."

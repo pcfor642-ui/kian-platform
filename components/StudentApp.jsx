@@ -4,9 +4,10 @@ import { useEffect, useState } from "react";
 import { Home, ClipboardList, FileText, MessageCircle, User, LogOut, ChevronLeft } from "lucide-react";
 import { T, FONT } from "./theme";
 import { GlassPanel, SectionTitle, Timeline, ThemeToggle, EmptyNote, AccountCard, logoutBtn } from "./ui";
-import { useAssignments, useQuestions, useResults, useExitEvents, useMessages } from "./api-hooks";
+import { useAssignments, useQuestions, useResults, useExitEvents, useMessages, useLectures } from "./api-hooks";
 import { SolvingView, ResultView } from "./Solving";
 import { ChatViewWithRead } from "./Messages";
+import { StudentLecturesSection, LecturePlayerView } from "./Lectures";
 import { useIsDesktop } from "./responsive";
 import { Sidebar, DesktopTopBar, Logomark } from "./AppShell";
 
@@ -138,6 +139,7 @@ export function StudentApp({ user, onLogout, dark, onToggleTheme }) {
   const [tab, setTab] = useState("home");
   const [active, setActive] = useState(null);
   const [lastResult, setLastResult] = useState(null);
+  const [viewingLecture, setViewingLecture] = useState(null);
 
   const { items: allExercises } = useAssignments("exercise");
   const { items: allExams } = useAssignments("exam");
@@ -145,6 +147,7 @@ export function StudentApp({ user, onLogout, dark, onToggleTheme }) {
   const { results, add: addResult } = useResults();
   const { add: addExitEvent } = useExitEvents(false);
   const { ready: msgReady, messages, send: sendMessage, markRead } = useMessages();
+  const { lectures, reportProgress } = useLectures();
 
   const teacher = useTeacher(user.teacherId);
 
@@ -201,6 +204,20 @@ export function StudentApp({ user, onLogout, dark, onToggleTheme }) {
     );
   }
 
+  if (viewingLecture) {
+    return (
+      <div style={{ position: "relative", minHeight: "100vh", background: T.bg, fontFamily: FONT, display: "flex", justifyContent: "center", padding: isDesktop ? "40px 24px" : "0 18px 24px" }}>
+        <div style={{ width: "100%", maxWidth: isDesktop ? 640 : "none" }}>
+          <LecturePlayerView
+            lecture={viewingLecture}
+            onExit={() => setViewingLecture(null)}
+            onProgress={(watched, duration) => reportProgress(viewingLecture.id, watched, duration)}
+          />
+        </div>
+      </div>
+    );
+  }
+
   const tabContent = (
     <>
       {tab === "home" && (
@@ -236,6 +253,8 @@ export function StudentApp({ user, onLogout, dark, onToggleTheme }) {
                 />
               )}
             </div>
+
+            <StudentLecturesSection lectures={lectures} onOpen={setViewingLecture} />
           </>
         )}
 

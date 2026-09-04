@@ -37,6 +37,8 @@ model User {
   receivedMessages Message[] @relation("Receiver")
   results          Result[]
   exitEvents       ExitEvent[]
+  lectures         Lecture[]     @relation("TeacherLectures")
+  lectureViews     LectureView[] @relation("StudentLectureViews")
 
   @@index([teacherId])
   @@index([role])
@@ -113,6 +115,35 @@ model Message {
   createdAt  DateTime @default(now())
 
   @@index([senderId, receiverId])
+}
+
+model Lecture {
+  id         String   @id @default(cuid())
+  title      String
+  videoUrl   String
+  teacherId  String
+  teacher    User     @relation("TeacherLectures", fields: [teacherId], references: [id], onDelete: Cascade)
+  studentIds String[]
+  createdAt  DateTime @default(now())
+
+  views LectureView[]
+
+  @@index([teacherId])
+}
+
+model LectureView {
+  id              String   @id @default(cuid())
+  lectureId       String
+  lecture         Lecture  @relation(fields: [lectureId], references: [id], onDelete: Cascade)
+  studentId       String
+  student         User     @relation("StudentLectureViews", fields: [studentId], references: [id], onDelete: Cascade)
+  watchedSeconds  Int      @default(0)
+  durationSeconds Int      @default(0)
+  completed       Boolean  @default(false)
+  updatedAt       DateTime @updatedAt
+
+  @@unique([lectureId, studentId])
+  @@index([studentId])
 }
 
 model SchoolSettings {

@@ -160,6 +160,35 @@ export function useMessages() {
   return { ready, messages: items, send, markRead };
 }
 
+/* ---------------- Lecture videos ---------------- */
+
+export function useLectures() {
+  const { ready, items, reload } = useApiList("/api/lectures");
+
+  const create = async (lecture) => {
+    await jsonFetch("/api/lectures", { method: "POST", body: JSON.stringify(lecture) });
+    await reload();
+  };
+
+  const remove = async (id) => {
+    await jsonFetch(`/api/lectures/${id}`, { method: "DELETE" });
+    await reload();
+  };
+
+  const reportProgress = async (id, watchedSeconds, durationSeconds) => {
+    try {
+      await jsonFetch(`/api/lectures/${id}/progress`, {
+        method: "POST",
+        body: JSON.stringify({ watchedSeconds, durationSeconds }),
+      });
+    } catch (e) {
+      /* best-effort */
+    }
+  };
+
+  return { ready, lectures: items, create, remove, reportProgress, reload };
+}
+
 /* ---------------- School settings ---------------- */
 
 export function useSchoolSettings() {
