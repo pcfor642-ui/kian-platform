@@ -1,6 +1,6 @@
 "use client";
 
-import { Menu, X, Bell, Sun, Moon, Check } from "lucide-react";
+import { Menu, X, Bell, Sun, Moon, Check, Sparkles } from "lucide-react";
 import { T, FONT } from "./theme";
 
 // These are exported as plain-looking objects but every theme-dependent
@@ -128,6 +128,45 @@ export function GlassPanel({ children, style }) {
   );
 }
 
+export function Greeting({ name, subtitle }) {
+  return (
+    <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+      <div
+        style={{
+          width: 40,
+          height: 40,
+          minWidth: 40,
+          borderRadius: 12,
+          background: `linear-gradient(135deg, ${T.amber}, ${T.blue})`,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          color: "#fff",
+          boxShadow: `0 8px 18px -8px ${T.amber}`,
+        }}
+      >
+        <Sparkles size={19} />
+      </div>
+      <div>
+        <div style={{ fontSize: 19, fontWeight: 800, letterSpacing: "-0.01em", lineHeight: 1.4 }}>
+          <span style={{ color: T.textSoft, fontWeight: 600 }}>سلام،</span>{" "}
+          <span
+            style={{
+              background: `linear-gradient(135deg, ${T.blue}, ${T.purple})`,
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              backgroundClip: "text",
+            }}
+          >
+            {name}
+          </span>
+        </div>
+        {subtitle && <div style={{ fontSize: 13, color: T.textSoft, marginTop: 4, wordBreak: "keep-all" }}>{subtitle}</div>}
+      </div>
+    </div>
+  );
+}
+
 export function StatRow({ items }) {
   return (
     <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 10 }}>
@@ -229,6 +268,7 @@ export function Drawer({ open, onClose, items, active, onSelect, footer }) {
             <button
               key={it.key}
               onClick={() => onSelect(it.key)}
+              className="kian-nav-icon"
               style={{
                 width: "100%",
                 display: "flex",
@@ -246,7 +286,7 @@ export function Drawer({ open, onClose, items, active, onSelect, footer }) {
                 marginBottom: 2,
               }}
             >
-              {it.icon}
+              <span className="kian-nav-icon-inner" style={{ display: "flex" }}>{it.icon}</span>
               <span style={{ wordBreak: "keep-all" }}>{it.label}</span>
             </button>
           ))}

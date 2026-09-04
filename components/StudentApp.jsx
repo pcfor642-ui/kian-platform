@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Home, ClipboardList, FileText, MessageCircle, User, LogOut, ChevronLeft } from "lucide-react";
 import { T, FONT } from "./theme";
-import { GlassPanel, SectionTitle, Timeline, ThemeToggle, EmptyNote, AccountCard, logoutBtn } from "./ui";
+import { GlassPanel, Greeting, SectionTitle, Timeline, ThemeToggle, EmptyNote, AccountCard, logoutBtn } from "./ui";
 import { useAssignments, useQuestions, useResults, useExitEvents, useMessages, useLectures } from "./api-hooks";
 import { SolvingView, ResultView } from "./Solving";
 import { ChatViewWithRead } from "./Messages";
@@ -90,6 +90,7 @@ function BottomNav({ tabs, active, onSelect }) {
             <button
               key={t.key}
               onClick={() => onSelect(t.key)}
+              className="kian-nav-icon"
               style={{
                 width: 52,
                 height: 52,
@@ -105,12 +106,13 @@ function BottomNav({ tabs, active, onSelect }) {
                 cursor: "pointer",
               }}
             >
-              {t.icon}
+              <span className="kian-nav-icon-inner" style={{ display: "flex" }}>{t.icon}</span>
             </button>
           ) : (
             <button
               key={t.key}
               onClick={() => onSelect(t.key)}
+              className="kian-nav-icon"
               style={{
                 border: "none",
                 background: "transparent",
@@ -124,7 +126,7 @@ function BottomNav({ tabs, active, onSelect }) {
                 padding: "4px 6px",
               }}
             >
-              {t.icon}
+              <span className="kian-nav-icon-inner" style={{ display: "flex" }}>{t.icon}</span>
               <span style={{ fontSize: 10.5, wordBreak: "keep-all" }}>{t.label}</span>
             </button>
           )
@@ -223,10 +225,7 @@ export function StudentApp({ user, onLogout, dark, onToggleTheme }) {
       {tab === "home" && (
           <>
             <div style={{ marginTop: 14 }}>
-              <div style={{ fontSize: 20, fontWeight: 800, letterSpacing: "-0.01em", color: T.text }}>سلام، {user.name.split(" ")[0]}</div>
-              <div style={{ fontSize: 13, color: T.textSoft, marginTop: 4, wordBreak: "keep-all" }}>
-                امروز آماده‌ای یک قدم جلوتر بری؟
-              </div>
+              <Greeting name={user.name.split(" ")[0]} subtitle="امروز آماده‌ای یک قدم جلوتر بری؟" />
             </div>
 
             <SectionTitle>پیشرفت من</SectionTitle>

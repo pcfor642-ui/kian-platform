@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Home, Users, BookOpen, ClipboardList, FileText, TrendingUp, MessageCircle, User, LogOut, Video } from "lucide-react";
 import { T, FONT } from "./theme";
-import { GlassPanel, SectionTitle, StatRow, PlaceholderPage, AccountCard, EmptyNote, logoutBtn, FollowUpRow } from "./ui";
+import { GlassPanel, Greeting, SectionTitle, StatRow, PlaceholderPage, AccountCard, EmptyNote, logoutBtn, FollowUpRow } from "./ui";
 import { AppShell } from "./AppShell";
 import { useUsers, useAssignments, useQuestions, useResults, useExitEvents } from "./api-hooks";
 import { QuestionBank } from "./QuestionBank";
@@ -59,10 +59,7 @@ export function TeacherApp({ user, onLogout, impersonating, dark, onToggleTheme 
       {page === "home" && (
         <>
           <GlassPanel style={{ padding: "20px 18px" }}>
-            <div style={{ fontSize: 17, fontWeight: 800, letterSpacing: "-0.01em", color: T.text }}>سلام، {user.name}</div>
-            <div style={{ fontSize: 13, color: T.textSoft, marginTop: 4 }}>
-              {myStudents.length} دانش‌آموز زیر نظر شما هستند.
-            </div>
+            <Greeting name={user.name} subtitle={`${myStudents.length} دانش‌آموز زیر نظر شما هستند.`} />
           </GlassPanel>
 
           <SectionTitle>نمای کلی</SectionTitle>

@@ -6,7 +6,7 @@ import {
   ClipboardList, Settings, TrendingUp, LogOut, User, Video,
 } from "lucide-react";
 import { T, FONT } from "./theme";
-import { GlassPanel, SectionTitle, StatRow, Timeline, PlaceholderPage, AccountCard, logoutBtn } from "./ui";
+import { GlassPanel, Greeting, SectionTitle, StatRow, Timeline, PlaceholderPage, AccountCard, logoutBtn } from "./ui";
 import { AppShell } from "./AppShell";
 import { useUsers, useAssignments, useResults, useExitEvents, useQuestions } from "./api-hooks";
 import { QuestionBank } from "./QuestionBank";
@@ -89,10 +89,7 @@ export function AdminApp({ user, onLogout, dark, onToggleTheme }) {
       {page === "home" && (
         <>
           <GlassPanel style={{ padding: "20px 18px" }}>
-            <div style={{ fontSize: 17, fontWeight: 800, letterSpacing: "-0.01em", color: T.text }}>سلام، {user.name}</div>
-            <div style={{ fontSize: 13, color: T.textSoft, marginTop: 4 }}>
-              امروز {teacherCount} معلم و {studentCount} دانش‌آموز فعال هستند.
-            </div>
+            <Greeting name={user.name} subtitle={`امروز ${teacherCount} معلم و ${studentCount} دانش‌آموز فعال هستند.`} />
           </GlassPanel>
 
           <SectionTitle>آمار کلی</SectionTitle>

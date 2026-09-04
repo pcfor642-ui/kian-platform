@@ -48,6 +48,7 @@ function Sidebar({ items, active, onSelect, footer }) {
           <button
             key={it.key}
             onClick={() => onSelect(it.key)}
+            className="kian-nav-icon"
             style={{
               width: "100%",
               display: "flex",
@@ -66,7 +67,7 @@ function Sidebar({ items, active, onSelect, footer }) {
               transition: "background 150ms ease, color 150ms ease",
             }}
           >
-            {it.icon}
+            <span className="kian-nav-icon-inner" style={{ display: "flex" }}>{it.icon}</span>
             <span>{it.label}</span>
           </button>
         ))}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Pencil, Trash2, X } from "lucide-react";
+import { Plus, Pencil, Trash2, X, User, AtSign, Lock, GraduationCap } from "lucide-react";
 import { T, FONT } from "./theme";
 import {
   fieldLabel,
@@ -167,51 +167,95 @@ export function PeopleManager({ roleLabel, filterRole, teacherOptions, fixedTeac
   );
 }
 
+function IconField({ icon, ...props }) {
+  return (
+    <div style={{ position: "relative", marginBottom: 12 }}>
+      {icon}
+      <input className="kian-input" {...props} style={{ ...fieldInput, paddingRight: 38, "--focus-ring-color": T.blue, "--focus-ring-glow": `${T.blue}22` }} />
+    </div>
+  );
+}
+
 function PersonForm({ roleLabel, initial, error, teacherOptions, showTeacherSelect, onCancel, onSave }) {
   const [form, setForm] = useState(initial);
+  const initials = (form.firstName?.trim()[0] || "") + (form.lastName?.trim()[0] || "");
 
   return (
     <div style={{ paddingTop: 8 }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18 }}>
         <SectionTitleInline>{form.id ? "ویرایش" : `${roleLabel} جدید`}</SectionTitleInline>
         <button onClick={onCancel} style={iconBtn}>
           <X size={18} />
         </button>
       </div>
 
+      <div
+        style={{
+          width: 56,
+          height: 56,
+          borderRadius: "50%",
+          background: `linear-gradient(135deg, ${T.blue}, ${T.purple})`,
+          color: "#fff",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontWeight: 700,
+          fontSize: 18,
+          margin: "0 auto 18px",
+        }}
+      >
+        {initials || <User size={22} />}
+      </div>
+
       <label style={fieldLabel}>نام</label>
-      <input value={form.firstName} onChange={(e) => setForm({ ...form, firstName: e.target.value })} style={{ ...fieldInput, marginBottom: 12 }} />
+      <IconField
+        icon={<User size={15} color={T.textFaint} style={{ position: "absolute", top: 13, right: 13 }} />}
+        value={form.firstName}
+        onChange={(e) => setForm({ ...form, firstName: e.target.value })}
+      />
 
       <label style={fieldLabel}>نام خانوادگی</label>
-      <input value={form.lastName} onChange={(e) => setForm({ ...form, lastName: e.target.value })} style={{ ...fieldInput, marginBottom: 12 }} />
+      <IconField
+        icon={<User size={15} color={T.textFaint} style={{ position: "absolute", top: 13, right: 13 }} />}
+        value={form.lastName}
+        onChange={(e) => setForm({ ...form, lastName: e.target.value })}
+      />
 
       <label style={fieldLabel}>نام کاربری</label>
-      <input value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value })} style={{ ...fieldInput, marginBottom: 12 }} />
+      <IconField
+        icon={<AtSign size={15} color={T.textFaint} style={{ position: "absolute", top: 13, right: 13 }} />}
+        value={form.username}
+        onChange={(e) => setForm({ ...form, username: e.target.value })}
+      />
 
       <label style={fieldLabel}>رمز عبور {form.id && "(برای تغییر پر کنید، در غیر این صورت خالی بگذارید)"}</label>
-      <input
+      <IconField
+        icon={<Lock size={15} color={T.textFaint} style={{ position: "absolute", top: 13, right: 13 }} />}
         value={form.password}
         onChange={(e) => setForm({ ...form, password: e.target.value })}
-        style={{ ...fieldInput, marginBottom: 12 }}
         placeholder={form.id ? "بدون تغییر" : ""}
       />
 
       {showTeacherSelect && (
         <>
           <label style={fieldLabel}>معلم</label>
-          <select
-            value={form.teacherId}
-            onChange={(e) => setForm({ ...form, teacherId: e.target.value })}
-            style={{ ...fieldInput, marginBottom: 12 }}
-          >
-            {(!teacherOptions || teacherOptions.length === 0) && <option value="">معلمی وجود ندارد</option>}
-            {teacherOptions &&
-              teacherOptions.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.name}
-                </option>
-              ))}
-          </select>
+          <div style={{ position: "relative", marginBottom: 12 }}>
+            <GraduationCap size={15} color={T.textFaint} style={{ position: "absolute", top: 13, right: 13, pointerEvents: "none" }} />
+            <select
+              value={form.teacherId}
+              onChange={(e) => setForm({ ...form, teacherId: e.target.value })}
+              className="kian-input"
+              style={{ ...fieldInput, paddingRight: 38, "--focus-ring-color": T.blue, "--focus-ring-glow": `${T.blue}22` }}
+            >
+              {(!teacherOptions || teacherOptions.length === 0) && <option value="">معلمی وجود ندارد</option>}
+              {teacherOptions &&
+                teacherOptions.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.name}
+                  </option>
+                ))}
+            </select>
+          </div>
         </>
       )}
 

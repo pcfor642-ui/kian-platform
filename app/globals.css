@@ -36,6 +36,26 @@ button {
   font: inherit;
 }
 
+button:not(:disabled) {
+  transition: transform 140ms ease, filter 140ms ease, box-shadow 140ms ease;
+}
+button:not(:disabled):hover {
+  filter: brightness(1.045);
+}
+button:not(:disabled):active {
+  transform: scale(0.97);
+}
+
+@keyframes kian-wiggle {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  25% { transform: translateY(-3px) rotate(-6deg); }
+  50% { transform: translateY(-1px) rotate(5deg); }
+  75% { transform: translateY(-3px) rotate(-3deg); }
+}
+.kian-nav-icon:hover .kian-nav-icon-inner {
+  animation: kian-wiggle 480ms ease-in-out;
+}
+
 @keyframes kian-star-fly-in {
   0% { transform: translate(var(--dx), var(--dy)) scale(0.25) rotate(var(--rot)); opacity: 0; }
   55% { opacity: 1; }
@@ -120,7 +140,8 @@ button {
   .kian-loading-logo,
   .kian-loading-dot,
   .kian-card-in,
-  .kian-blob {
+  .kian-blob,
+  .kian-nav-icon-inner {
     animation: none !important;
     opacity: 1 !important;
   }

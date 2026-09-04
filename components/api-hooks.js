@@ -12,11 +12,12 @@ async function jsonFetch(url, options) {
   return data;
 }
 
-function useApiList(url) {
-  const [ready, setReady] = useState(false);
+function useApiList(url, enabled = true) {
+  const [ready, setReady] = useState(!enabled);
   const [items, setItems] = useState([]);
 
   const reload = useCallback(async () => {
+    if (!enabled) return;
     try {
       const res = await fetch(url);
       if (res.ok) setItems(await res.json());
@@ -24,7 +25,7 @@ function useApiList(url) {
       /* offline */
     }
     setReady(true);
-  }, [url]);
+  }, [url, enabled]);
 
   useEffect(() => {
     reload();
@@ -121,7 +122,7 @@ export function useResults() {
 /* ---------------- Exit / anti-cheating events ---------------- */
 
 export function useExitEvents(enabled = true) {
-  const { ready, items, reload } = useApiList(enabled ? "/api/exit-events" : "/api/exit-events?disabled=1");
+  const { ready, items } = useApiList("/api/exit-events", enabled);
 
   const add = async (event) => {
     try {
