@@ -109,7 +109,7 @@ export function TeacherApp({ user, onLogout, impersonating, dark, onToggleTheme 
       {page === "questions" && <QuestionBank roleLabel="معلم" />}
       {page === "exercises" && <AssignmentBank type="exercise" students={myStudents} />}
       {page === "exams" && <AssignmentBank type="exam" students={myStudents} />}
-      {page === "results" && <ResultsPage students={myStudents} exercises={exercises} exams={exams} results={results} exitEvents={exitEvents} />}
+      {page === "results" && <ResultsPage students={myStudents} exercises={exercises} exams={exams} results={results} exitEvents={exitEvents} questions={questions} />}
       {page === "lectures" && <LectureManager students={myStudents} />}
       {page === "messages" && <TeacherMessages user={user} students={myStudents} />}
 

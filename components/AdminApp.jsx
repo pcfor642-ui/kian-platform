@@ -8,7 +8,7 @@ import {
 import { T, FONT } from "./theme";
 import { GlassPanel, SectionTitle, StatRow, Timeline, PlaceholderPage, AccountCard, logoutBtn } from "./ui";
 import { AppShell } from "./AppShell";
-import { useUsers, useAssignments, useResults, useExitEvents } from "./api-hooks";
+import { useUsers, useAssignments, useResults, useExitEvents, useQuestions } from "./api-hooks";
 import { QuestionBank } from "./QuestionBank";
 import { AssignmentBank } from "./Assignments";
 import { ResultsPage } from "./Results";
@@ -29,6 +29,7 @@ export function AdminApp({ user, onLogout, dark, onToggleTheme }) {
   const { items: exams } = useAssignments("exam");
   const { results } = useResults();
   const { events: exitEvents } = useExitEvents();
+  const { questions } = useQuestions();
 
   const teacherCount = teachers.length;
   const studentCount = allStudents.length;
@@ -148,7 +149,7 @@ export function AdminApp({ user, onLogout, dark, onToggleTheme }) {
       {page === "questions" && <QuestionBank roleLabel="مدیر" />}
       {page === "exercises" && <AssignmentBank type="exercise" students={allStudents} />}
       {page === "exams" && <AssignmentBank type="exam" students={allStudents} />}
-      {page === "results" && <ResultsPage students={allStudents} exercises={exercises} exams={exams} results={results} exitEvents={exitEvents} />}
+      {page === "results" && <ResultsPage students={allStudents} exercises={exercises} exams={exams} results={results} exitEvents={exitEvents} questions={questions} />}
       {page === "lectures" && <LectureManager students={allStudents} />}
       {page === "messages" && <AdminMessages user={user} teachers={teachers} students={allStudents} />}
       {page === "settings" && <SettingsPage />}
