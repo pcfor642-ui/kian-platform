@@ -107,6 +107,8 @@ model Message {
   receiverId String
   receiver   User     @relation("Receiver", fields: [receiverId], references: [id], onDelete: Cascade)
   text       String
+  attachmentUrl  String?
+  attachmentType String?
   isRead     Boolean  @default(false)
   createdAt  DateTime @default(now())
 

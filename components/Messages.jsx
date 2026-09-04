@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { ArrowRight } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { ArrowRight, Paperclip, Mic, Square, X } from "lucide-react";
 import { T, FONT } from "./theme";
 import { fieldInput, iconBtn, primaryIconBtn, SectionTitle, EmptyNote } from "./ui";
 import { useMessages } from "./api-hooks";
@@ -11,8 +11,60 @@ function formatTime(iso) {
   return d.toLocaleTimeString("fa-IR", { hour: "2-digit", minute: "2-digit" });
 }
 
+function formatRecordTime(totalSeconds) {
+  const m = Math.floor(totalSeconds / 60);
+  const s = totalSeconds % 60;
+  return `${m}:${s.toString().padStart(2, "0")}`;
+}
+
+async function uploadChatFile(file) {
+  const fd = new FormData();
+  fd.append("file", file);
+  fd.append("kind", "chat-attachment");
+  const res = await fetch("/api/upload", { method: "POST", body: fd });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || "آپلود فایل ممکن نشد.");
+  return data;
+}
+
+function attachmentKind(type) {
+  if (type?.startsWith("image/")) return "image";
+  if (type?.startsWith("video/")) return "video";
+  if (type?.startsWith("audio/")) return "audio";
+  return null;
+}
+
+function MessageAttachment({ url, type }) {
+  if (type === "image") {
+    return <img src={url} alt="" style={{ maxWidth: "100%", borderRadius: 12, display: "block", marginBottom: 6 }} />;
+  }
+  if (type === "video") {
+    return <video src={url} controls style={{ maxWidth: "100%", borderRadius: 12, display: "block", marginBottom: 6 }} />;
+  }
+  if (type === "audio") {
+    return <audio src={url} controls style={{ width: "100%", marginBottom: 6 }} />;
+  }
+  return null;
+}
+
 function ChatView({ me, other, messages, onSend, onBack }) {
   const [text, setText] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const [recording, setRecording] = useState(false);
+  const [recordSeconds, setRecordSeconds] = useState(0);
+  const [error, setError] = useState("");
+  const fileInputRef = useRef(null);
+  const mediaRecorderRef = useRef(null);
+  const chunksRef = useRef([]);
+  const timerRef = useRef(null);
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+      mediaRecorderRef.current?.stream?.getTracks().forEach((t) => t.stop());
+    };
+  }, []);
+
   const thread = messages
     .filter((m) => (m.senderId === me.id && m.receiverId === other.id) || (m.senderId === other.id && m.receiverId === me.id))
     .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
@@ -21,6 +73,59 @@ function ChatView({ me, other, messages, onSend, onBack }) {
     if (!text.trim()) return;
     onSend(text.trim());
     setText("");
+  };
+
+  const handleFilePick = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setUploading(true);
+    setError("");
+    try {
+      const { url, type } = await uploadChatFile(file);
+      onSend("", { url, type: attachmentKind(type) });
+    } catch (err) {
+      setError(err.message);
+    }
+    setUploading(false);
+  };
+
+  const startRecording = async () => {
+    setError("");
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
+      chunksRef.current = [];
+      recorder.ondataavailable = (e) => chunksRef.current.push(e.data);
+      recorder.onstop = async () => {
+        stream.getTracks().forEach((t) => t.stop());
+        clearInterval(timerRef.current);
+        const blob = new Blob(chunksRef.current, { type: recorder.mimeType || "audio/webm" });
+        if (blob.size > 0) {
+          setUploading(true);
+          try {
+            const file = new File([blob], "voice-message.webm", { type: blob.type });
+            const { url, type } = await uploadChatFile(file);
+            onSend("", { url, type: attachmentKind(type) || "audio" });
+          } catch (err) {
+            setError(err.message);
+          }
+          setUploading(false);
+        }
+      };
+      mediaRecorderRef.current = recorder;
+      recorder.start();
+      setRecordSeconds(0);
+      timerRef.current = setInterval(() => setRecordSeconds((s) => s + 1), 1000);
+      setRecording(true);
+    } catch (e) {
+      setError("دسترسی به میکروفون ممکن نشد.");
+    }
+  };
+
+  const stopRecording = () => {
+    mediaRecorderRef.current?.stop();
+    setRecording(false);
   };
 
   return (
@@ -63,37 +168,82 @@ function ChatView({ me, other, messages, onSend, onBack }) {
                   color: mine ? "#fff" : T.text,
                   border: mine ? "none" : `1px solid ${T.border}`,
                   borderRadius: mine ? "16px 16px 16px 4px" : "16px 16px 4px 16px",
-                  padding: "10px 13px",
+                  padding: m.attachmentUrl ? 7 : "10px 13px",
                   fontSize: 13.5,
                   wordBreak: "keep-all",
                   overflowWrap: "break-word",
                 }}
               >
-                {m.text}
-                <div style={{ fontSize: 10, opacity: 0.7, marginTop: 4, textAlign: "left" }}>{formatTime(m.createdAt)}</div>
+                {m.attachmentUrl && <MessageAttachment url={m.attachmentUrl} type={m.attachmentType} />}
+                {m.text && <div style={{ padding: m.attachmentUrl ? "0 5px" : 0 }}>{m.text}</div>}
+                <div style={{ fontSize: 10, opacity: 0.7, marginTop: 4, textAlign: "left", padding: m.attachmentUrl ? "0 5px" : 0 }}>
+                  {formatTime(m.createdAt)}
+                </div>
               </div>
             </div>
           );
         })}
       </div>
 
-      <div style={{ display: "flex", gap: 8, paddingTop: 10, borderTop: `1px solid ${T.border}` }}>
-        <input
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && submit()}
-          placeholder="پیام خود را بنویسید..."
-          style={{ ...fieldInput, flex: 1 }}
-        />
-        <button onClick={submit} style={primaryIconBtn}>
-          <ArrowRight size={17} style={{ transform: "scaleX(-1)" }} />
-        </button>
+      {error && <div style={{ color: T.danger, fontSize: 11.5, marginBottom: 6, textAlign: "center" }}>{error}</div>}
+
+      <div style={{ display: "flex", gap: 8, paddingTop: 10, borderTop: `1px solid ${T.border}`, alignItems: "center" }}>
+        <input ref={fileInputRef} type="file" accept="image/*,video/*" onChange={handleFilePick} style={{ display: "none" }} />
+
+        {recording ? (
+          <button
+            onClick={stopRecording}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              flex: 1,
+              border: `1px solid ${T.danger}`,
+              background: T.dangerSoft,
+              color: T.danger,
+              borderRadius: 12,
+              padding: "0 14px",
+              height: 44,
+              fontFamily: FONT,
+              fontSize: 13,
+              cursor: "pointer",
+            }}
+          >
+            <Square size={14} fill={T.danger} /> در حال ضبط... {formatRecordTime(recordSeconds)}
+          </button>
+        ) : (
+          <input
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && submit()}
+            placeholder={uploading ? "در حال آپلود..." : "پیام خود را بنویسید..."}
+            disabled={uploading}
+            style={{ ...fieldInput, flex: 1 }}
+          />
+        )}
+
+        {!recording && (
+          <button onClick={() => fileInputRef.current?.click()} disabled={uploading} style={iconBtn} title="ارسال عکس یا ویدیو">
+            <Paperclip size={19} />
+          </button>
+        )}
+        {!recording && (
+          <button onClick={startRecording} disabled={uploading} style={iconBtn} title="ارسال پیام صوتی">
+            <Mic size={19} />
+          </button>
+        )}
+        {!recording && (
+          <button onClick={submit} style={primaryIconBtn}>
+            <ArrowRight size={17} style={{ transform: "scaleX(-1)" }} />
+          </button>
+        )}
       </div>
     </div>
   );
 }
 
 function ContactListItem({ contact, roleLabel, last, unread, onClick }) {
+  const lastLabel = last ? (last.attachmentUrl ? `📎 ${last.text || "پیوست"}` : last.text) : "هنوز گفت‌وگویی نیست";
   return (
     <button
       onClick={onClick}
@@ -138,7 +288,7 @@ function ContactListItem({ contact, roleLabel, last, unread, onClick }) {
             )}
           </div>
           <div style={{ fontSize: 12, color: T.textFaint, marginTop: 2, wordBreak: "keep-all", maxWidth: 180, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-            {last ? last.text : "هنوز گفت‌وگویی نیست"}
+            {lastLabel}
           </div>
         </div>
       </div>
@@ -163,7 +313,7 @@ export function AdminMessages({ user, teachers, students }) {
   if (other) {
     return (
       <div style={{ paddingTop: 8 }}>
-        <ChatView me={user} other={other} messages={messages} onSend={(text) => send(other.id, text)} onBack={() => setActiveId(null)} />
+        <ChatView me={user} other={other} messages={messages} onSend={(text, attachment) => send(other.id, text, attachment)} onBack={() => setActiveId(null)} />
       </div>
     );
   }
@@ -207,7 +357,7 @@ export function TeacherMessages({ user, students }) {
   if (other) {
     return (
       <div style={{ paddingTop: 8 }}>
-        <ChatView me={user} other={other} messages={messages} onSend={(text) => send(other.id, text)} onBack={() => setActiveId(null)} />
+        <ChatView me={user} other={other} messages={messages} onSend={(text, attachment) => send(other.id, text, attachment)} onBack={() => setActiveId(null)} />
       </div>
     );
   }
@@ -248,7 +398,7 @@ export function ChatViewWithRead({ user, teacher, messages, sendMessage, markRea
   return (
     <>
       <SectionTitle>پیام‌ها</SectionTitle>
-      <ChatView me={user} other={teacher} messages={messages} onSend={(text) => sendMessage(teacher.id, text)} />
+      <ChatView me={user} other={teacher} messages={messages} onSend={(text, attachment) => sendMessage(teacher.id, text, attachment)} />
     </>
   );
 }

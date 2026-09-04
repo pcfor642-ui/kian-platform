@@ -139,8 +139,16 @@ export function useExitEvents(enabled = true) {
 export function useMessages() {
   const { ready, items, reload } = useApiList("/api/messages");
 
-  const send = async (receiverId, text) => {
-    await jsonFetch("/api/messages", { method: "POST", body: JSON.stringify({ receiverId, text }) });
+  const send = async (receiverId, text, attachment) => {
+    await jsonFetch("/api/messages", {
+      method: "POST",
+      body: JSON.stringify({
+        receiverId,
+        text,
+        attachmentUrl: attachment?.url,
+        attachmentType: attachment?.type,
+      }),
+    });
     await reload();
   };
 

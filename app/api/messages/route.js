@@ -22,8 +22,10 @@ export async function POST(req) {
   const me = session.user;
 
   const body = await req.json();
-  const { receiverId, text } = body;
-  if (!receiverId || !text?.trim()) return NextResponse.json({ error: "invalid payload" }, { status: 400 });
+  const { receiverId, text, attachmentUrl, attachmentType } = body;
+  if (!receiverId || (!text?.trim() && !attachmentUrl)) {
+    return NextResponse.json({ error: "invalid payload" }, { status: 400 });
+  }
 
   const receiver = await prisma.user.findUnique({ where: { id: receiverId } });
   if (!receiver) return NextResponse.json({ error: "not found" }, { status: 404 });
@@ -38,7 +40,13 @@ export async function POST(req) {
   if (!allowed) return NextResponse.json({ error: "forbidden" }, { status: 403 });
 
   const message = await prisma.message.create({
-    data: { senderId: me.id, receiverId, text: text.trim() },
+    data: {
+      senderId: me.id,
+      receiverId,
+      text: text?.trim() || "",
+      attachmentUrl: attachmentUrl || null,
+      attachmentType: attachmentType || null,
+    },
   });
 
   return NextResponse.json(serializeMessage(message), { status: 201 });
